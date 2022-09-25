@@ -1,83 +1,40 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from person import Person
+from address import Address
+import json
+
 
 app = FastAPI()
 
-persons_db = {
-    1: {
-        "name": "Carl Scott",
-        "age": 32,
-        "addresses": {
-            1: {
-                "street": "Thunder Street",
-                "number": 2
-            },
-            2: {
-                "street": "Bradley Hall",
-                "number": 665
-    
-            },
-            3: {
-                "street": "Locktown",
-                "number": 78
-        
-            }
-    
-        }
-    },
-    2: {
-        "name": "John Bon",
-        "age": 45,
-        "addresses": {
-            1: {
-                "street": "St. Gobain",
-                "number": 35
-            },
-            2: {
-                "street": "Milwaukee",
-                "number": 10
-            }
-        }
-    },
-    3: {
-        "name": "Melissa Andrews",
-        "age": 28,
-        "addresses": {
-            1: {
-                "street": "Thunder Street",
-                "number": 2
-            }
-        }
-    },
-    4: {
-        "name": "Jim Terry",
-        "age": 22,
-        "addresses": {
-            1: {
-                "street": "Ball valley",
-                "number": 478
-            },
-            2: {
-                "street": "Harley Mills",
-                "number": 145
-            }
-        }
-    },
-    5: {
-        "name": "Sarah Bills",
-        "age": 48,
-        "addresses": {
-            1: {
-                "street": "Catle bar",
-                "number": 659
-            },
-            2: {
-                "street": "Langdon Paris",
-                "number": 14
-            }
-        }
-    }
-}
+
+persons_db = [
+    Person(name="Carl Scott", age=32, addresses=[
+        Address(name="Thunder Street", number=2),
+        Address(name="Bradley Hall", number=665),
+        Address(name="Locktown", number=78)
+    ]
+    ),
+    Person(name="John Bon", age=45, addresses=[
+        Address(name="St. Gobin", number=35),
+        Address(name="Milwaukee", number=10)
+    ]
+    ),
+    Person(name="Melissa Andrews", age=28, addresses=[
+        Address(name="Thunder Street", number=15)
+    ]
+    ),
+    Person(name="Jim Terry", age=22, addresses=[
+        Address(name="Ball valley", number=478),
+        Address(name="Harley Mills", number=147)
+    ]
+    ),
+    Person(name="Sarah Bills", age=48, addresses=[
+        Address(name="Catle Bar", number=659),
+        Address(name="Langdon Park", number=14)
+    ]
+    )
+]
 
 
 @app.get('/', response_class=HTMLResponse)
@@ -97,22 +54,32 @@ def home():
 
 
 @app.get("/persons")
-def findAll():
-    return persons_db
-
+def find_all():
+    if len(persons_db) > 0:
+        return persons_db
+    return {"Error": "No person registered"}
 
 
 @app.get("/persons/{person_id}")
-def findById(person_id: int):
-    return persons_db.get(person_id, {
+def find_by_id(person_id: int):
+    if len(persons_db) >= person_id-1 >= 0:
+        return persons_db[person_id-1]
+    return {
         "Error": "Person not found",
         "Id": person_id
-    })
+    }
 
 
 @app.get("/persons/{person_id}/addresses")
-def findAllAddress(person_id: int):
-    return persons_db.get(person_id).get("addresses")
-    
+def find_all_addresses(person_id: int):
+    if len(persons_db) >= person_id-1 >= 0:
+        if len(persons_db[person_id].addresses) > 0:
+            return persons_db[person_id-1].addresses
+        return {"Error": "This person doesn't have any address registered"}
+    return {"Error": "Person not Found", "Id": person_id}
 
-    
+
+@app.post("/persons")
+def add_person(request: Person):
+    persons_db.append(request)
+    return request
